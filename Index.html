@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQC Universe</title>
+    <style>
+        /* ... (previous CSS remains the same) ... */
+        
+        .search-container {
+            margin: 20px 0;
+        }
+        #search-input {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #search-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Anomaly Quarantine Corporation</h1>
+    </header>
+    
+    <nav>
+        <a href="#" onclick="showContent('home')">Home</a>
+        <a href="#" onclick="showContent('about')">About AQC</a>
+        <a href="#" onclick="showContent('reports')">Anomaly Reports</a>
+    </nav>
+
+    <!-- ... (previous HTML content remains the same) ... -->
+
+    <div id="reports" class="content" style="display:none;">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search anomalies...">
+            <button id="search-button" onclick="searchContent()">Search</button>
+        </div>
+        <div id="aqc-content">
+            <!-- Anomaly reports will be loaded here -->
+        </div>
+    </div>
+
+    <!-- ... (previous HTML content remains the same) ... -->
+
+    <script>
+        const FOLDER_ID = 'YOUR_GOOGLE_DRIVE_FOLDER_ID';
+        let allPosts = []; // This will store all our posts for searching
+
+        // ... (previous JavaScript functions remain the same) ...
+
+        async function displayAQCContent() {
+            const contentDiv = document.getElementById('aqc-content');
+            const files = await fetchFileList();
+            
+            for (const file of files) {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post';
+                
+                if (file.name.startsWith('post_')) {
+                    const content = await loadTextContent(file.id);
+                    const title = file.name.replace('post_', '').replace('.txt', '');
+                    postDiv.innerHTML = `<h2>${title}</h2><p>${content}</p>`;
+                    allPosts.push({title: title, content: content, element: postDiv});
+                } else if (file.name.startsWith('img_')) {
+                    const img = document.createElement('img');
+                    img.src = getImageUrl(file.id);
+                    img.alt = file.name.replace('img_', '').replace(/\.[^/.]+$/, "");
+                    img.style.cursor = 'pointer';
+                    img.onclick = function() { openModal(this.src); };
+                    postDiv.appendChild(img);
+                    allPosts.push({title: img.alt, content: '', element: postDiv});
+                }
+                
+                contentDiv.appendChild(postDiv);
+            }
+        }
+
+        function searchContent() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const contentDiv = document.getElementById('aqc-content');
+            contentDiv.innerHTML = ''; // Clear current content
+
+            allPosts.forEach(post => {
+                if (post.title.toLowerCase().includes(searchTerm) || post.content.toLowerCase().includes(searchTerm)) {
+                    contentDiv.appendChild(post.element.cloneNode(true));
+                }
+            });
+
+            if (contentDiv.children.length === 0) {
+                contentDiv.innerHTML = '<p>No results found.</p>';
+            }
+        }
+
+        // ... (previous JavaScript functions remain the same) ...
+
+        // Load content when the page loads
+        window.onload = function() {
+            displayAQCContent();
+            showContent('home');
+        };
+    </script>
+</body>
+</html>
